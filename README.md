@@ -1,6 +1,6 @@
 # ARC DSL
 
-Implements the domain specific language for ARC.
+Implements a domain specific language for the ARC challenge by François Chollet.
 
 Use `node index.js` to run a program on a task file.
 
