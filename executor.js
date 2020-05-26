@@ -39,18 +39,24 @@ const select = selector => {
   for (const [y, row] of grid.entries()) {
     for (const [x, color] of row.entries()) {
 
-      // If this square is non background color
       if (color !== backgroundColor) {
 
         // If we have an object neighboring this square, add the square to it
         let assigned = false;
         for (const [i, coords] of objects.entries()) {
           for (const [y2, x2] of coords) {
+
             if (Math.abs(y - y2) <= 1 && Math.abs(x - x2) <= 1) {
               // Add this square to neighboring object
               objects[i].push([y, x]);
+
+              // Square has been assigned to an object, stop looking for objects
+              // to assign it to
+              assigned = true;
+              break;
             }
           }
+          if (assigned) break;
         }
 
         // Otherwise, create a new object
@@ -68,6 +74,9 @@ const select = selector => {
     }
 
     if (selector.part === "interior") {
+
+      console.log("Select interiors");
+
       // Create one empty interior per object in selection
       const interiors = objects.map(x => []);
 
