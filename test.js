@@ -20,7 +20,7 @@ for (const file of jsonFiles) {
     const output = executor(path.join(folder, "program.js"), grid);
 
     if (JSON.stringify(output) !== JSON.stringify(testGrid.output)) {
-      errors.push(new Error(`Failed test grid #${i + 1} of task "${file}"`));
+      errors.push(`Failed test grid #${i + 1} of task "${file}"`);
     } else {
       console.log(`Successfully solved test grid #${i + 1} of task "${file}"`)
     }

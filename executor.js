@@ -66,10 +66,30 @@ const getAllObjects = (grid, backgroundColor = 0) => {
   return objects;
 }
 
+// Return null if placeholder is not a real placeholder to simplify logic
+// (so this function can be called and its result only used if truthy)
+const getValueOfPlaceholder = (grid, placeholder) => {
+  if (placeholder === "$least-used-color") {
+    return getLeastUsedColor(grid);
+  }
+  if (placeholder === "$numberOfNonBackgroundSquaresInGrid") {
+    return getNumberOfNonBackgroundSquares(grid);
+  }
+}
+
 // Given a selector object, returns the targeted objects on the grid
 const select = (selector, grid) => {
   // Background color is black by default
   const backgroundColor = 0;
+
+  // Replace placeholder tokens in selector object properties with the real
+  // values. Thus the code below only has to deal with literal values.
+  for (const key of Object.keys(selector)) {
+    const realValue = getValueOfPlaceholder(grid, selector[key]);
+    if (realValue) {
+      selector[key] = realValue;
+    }
+  }
 
   // Create initial objects array, which holds the coordinates of all objects
   // of non background color in the grid
@@ -78,6 +98,10 @@ const select = (selector, grid) => {
   console.log(
     `Found ${objects.length} object${objects.length !== 1 ? "s" : ""} in the grid.`
   );
+
+  if (selector.color) {
+    objects = selectObjectsOfColor(objects, grid, selector.color);
+  }
 
   // selector.part: only supports "interior" for now
   if (selector.part) {
@@ -90,20 +114,24 @@ const select = (selector, grid) => {
     }
   }
 
-  /**
-   * selector["special-color"]:
-   * Allows specifying dynamic colors such as the most or least used in the
-   * grid.
-   * Values supported: "least-used"
-   */
-  if (selector["special-color"]) {
-    if (selector["special-color"] !== "least-used") {
-      throw new Error("Invalid special-color");
+  // selector.contains-most-squares-of-color: selects the object with the most
+  // squares of the given color
+  if (selector["contains-most-squares-of-color"]) {
+    const c = selector["contains-most-squares-of-color"];
+
+    const counts = [];
+    for (const [i, points] of objects.entries()) {
+      counts[i] = 0;
+      for (const [y, x] of points) {
+        if (grid[y][x] === c) {
+          counts[i] += 1;
+        }
+      }
     }
 
-    const leastUsedColor = getLeastUsedColor(grid);
+    const index = counts.indexOf(Math.max(...counts));
 
-    objects = selectObjectsOfColor(objects, grid, leastUsedColor);
+    objects = [objects[index]]
   }
 
   console.log(
@@ -167,16 +195,14 @@ module.exports = (pathToProgram, grid, outputHtml = null) => {
     if (upOrDown !== "up" && upOrDown !== "down") {
       throw new Error("Invalid upOrDown");
     }
-    if (factor !== "$numberOfNonBackgroundSquaresInGrid") {
-      throw new Error("Invalid scale factor");
-    }
-
-    if (factor === "$numberOfNonBackgroundSquaresInGrid") {
-      factor = getNumberOfNonBackgroundSquares(grid);
-    }
-
     if (upOrDown === "down") {
       throw new Error("Unsupported upOrDown = down");
+    }
+
+    // Factor supports placeholder tokens
+    const realValue = getValueOfPlaceholder(grid, factor);
+    if (realValue) {
+      factor = realValue;
     }
 
     const newGrid = [];
@@ -200,12 +226,48 @@ module.exports = (pathToProgram, grid, outputHtml = null) => {
     grid = newGrid;
   }
 
+  const outline = (selector, color) => {
+    checkColorParameter(color);
+
+    const selectedObjects = select(selector, grid);
+
+    for (const points of selectedObjects) {
+      for (const [y, x] of points) {
+        let neighbors = [
+          [y, x + 1],
+          [y, x - 1],
+          [y + 1, x],
+          [y - 1, x],
+          [y + 1, x + 1],
+          [y + 1, x - 1],
+          [y - 1, x + 1],
+          [y - 1, x - 1]
+        ];
+
+        // Remove neighbors out of bounds
+        neighbors.filter(
+          ([ny, nx]) => ny >= 0 && nx >= 0 && ny < grid.length && nx < grid[0].length
+        );
+
+        // Remove neighbors of non background color
+        neighbors.filter(
+          ([ny, nx]) => grid[ny][nx] === 0 // TODO: do not hardcode background color
+        );
+
+        for (const [ny, nx] of neighbors) {
+          grid[ny][nx] = colors[color];
+        }
+      }
+    }
+  }
+
   const script = fs.readFileSync(pathToProgram, "utf8");
 
   vm.runInNewContext(script, {
     paint,
     crop,
-    scaleGrid
+    scaleGrid,
+    outline
   });
 
   if (outputHtml) {

@@ -27,7 +27,7 @@ module.exports = function createObjectFromPoint(y, x, grid, backgroundColor = 0)
         [y + 1, x + 1],
         [y + 1, x - 1],
         [y - 1, x + 1],
-        [y - 1, x - 1],
+        [y - 1, x - 1]
       ];
 
       // Remove out of bounds neighbors

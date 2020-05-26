@@ -1,1 +1,1 @@
-crop({ "special-color": "least-used" });
+crop({ "color": "$least-used-color" });
