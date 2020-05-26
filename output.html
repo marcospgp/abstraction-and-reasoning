@@ -1,0 +1,60 @@
+
+    <head>
+      <title>Grid Viewer</title>
+      <style>
+        body{ background-color: ivory; }
+        canvas {
+          padding: 0;
+          margin: auto;
+          display: block;
+        }
+      </style>
+    </head>
+    <body>
+      <canvas id="canvas" width=600 height=600></canvas>
+
+      <script>
+        const grid = JSON.parse("[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,3,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,3,0,3,3,3,3,3,0,3,3,0,0,0,0,0,0,0,0],[0,0,0,0,3,0,0,0,0,3,0,0,3,0,0,0,0,0,0,0],[0,0,0,0,3,3,3,3,3,0,3,3,3,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,3,3,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,3,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,3,0,0],[0,0,0,0,0,0,0,0,0,3,3,3,3,3,0,0,0,3,0,0],[0,0,0,0,0,0,0,0,0,3,0,0,0,3,0,0,0,3,0,0],[0,0,0,0,0,0,0,0,3,3,3,3,3,3,0,0,0,3,0,0],[0,0,0,0,0,0,3,3,0,3,0,0,0,3,3,3,3,3,0,0],[0,0,3,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0],[0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,3,0,3,0,3,3,3,3,3,3,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,3,0,0,0,3,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,3,0,0,0,3,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,3,3,3,3,3,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]");
+        const colors = [
+          "#000000",
+          "#0074D9",
+          "#FF4136",
+          "#2ECC40",
+          "#FFDC00",
+          "#AAAAAA",
+          "#F012BE",
+          "#FF851B",
+          "#7FDBFF",
+          "#870C25"
+        ];
+
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const cellWidth = canvasWidth / grid[0].length;
+        const cellHeight = canvasHeight / grid.length;
+
+        // Draw squares
+        for (const [y, row] of grid.entries()) {
+          for (const [x, color] of row.entries()) {
+            ctx.fillStyle = colors[color];
+            ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+          }
+        }
+
+        // Draw grid lines (after squares so they don't get covered up)
+        ctx.beginPath();
+        for (const y of grid.keys()) {
+          ctx.moveTo(0, y * cellHeight);
+          ctx.lineTo(canvasWidth, y * cellHeight);
+        }
+        for (const x of grid[0].keys()) {
+          ctx.moveTo(x * cellWidth, 0);
+          ctx.lineTo(x * cellWidth, canvasHeight);
+        }
+        ctx.strokeStyle = "#555555";
+        ctx.stroke();
+      </script>
+    </body>
+  
