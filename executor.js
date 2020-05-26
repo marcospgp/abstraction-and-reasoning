@@ -5,6 +5,7 @@ const fs = require("fs");
 const getInterior = require("./helpers/get-interior");
 const createObjectFromPoint = require("./helpers/create-object-from-point");
 const getLeastUsedColor = require("./helpers/get-least-used-color");
+const selectObjectsOfColor = require("./helpers/select-objects-of-color");
 
 const colors = {
   "black": 0,
@@ -40,8 +41,7 @@ const getAllObjects = (grid, backgroundColor = 0) => {
 
         // This square is not of background color. If it does not belong to an
         // object yet, form a new object from it by recursively grouping it with
-        // all non background color squares that are connected to it, either
-        // directly or through other squares of non background color.
+        // all non background color squares that are connected to it.
 
         let alreadyAssigned = false;
 
@@ -74,6 +74,10 @@ const select = (selector, grid) => {
   // of non background color in the grid
   let objects = getAllObjects(grid, backgroundColor)
 
+  console.log(
+    `Found ${objects.length} object${objects.length !== 1 ? "s" : ""} in the grid.`
+  );
+
   // selector.part: only supports "interior" for now
   if (selector.part) {
     if (!["interior"].includes(selector.part)) {
@@ -87,8 +91,9 @@ const select = (selector, grid) => {
 
   /**
    * selector["special-color"]:
-   * allows specifying dynamic colors such as the most or least used.
-   * values supported: "least-used"
+   * Allows specifying dynamic colors such as the most or least used in the
+   * grid.
+   * Values supported: "least-used"
    */
   if (selector["special-color"]) {
     if (selector["special-color"] !== "least-used") {
@@ -99,6 +104,10 @@ const select = (selector, grid) => {
 
     objects = selectObjectsOfColor(objects, grid, leastUsedColor);
   }
+
+  console.log(
+    `After running selector, ${objects.length} object${objects.length !== 1 ? "s" : ""} selected.`
+  );
 
   return objects;
 }
@@ -120,20 +129,44 @@ module.exports = (pathToProgram, grid, outputHtml = null) => {
     }
   }
 
+  // Crops the grid to display only the selected objects.
+  // Crop coordinates are the maximum and minimum X and Y of all the points in
+  // the objects.
   const crop = (selector) => {
+    const selectedObjects = select(selector, grid);
 
+    let minY = null;
+    let maxY = null;
+    let minX = null;
+    let maxX = null;
+
+    for (const obj of selectedObjects) {
+      for (const [y, x] of obj) {
+        if (minY === null || y < minY) minY = y;
+        if (maxY === null || y > maxY) maxY = y;
+        if (minX === null || x < minX) minX = x;
+        if (maxX === null || x > maxX) maxX = x;
+      }
+    }
+
+    const newGrid = [];
+
+    for (const [y, row] of grid.entries()) {
+      if (y >= minY && y <= maxY) {
+        const newRow = row.slice(minX, maxX + 1);
+        newGrid.push(newRow);
+      }
+    }
+
+    grid = newGrid;
   }
 
   const script = fs.readFileSync(pathToProgram, "utf8");
 
-  // The context program files will run on
-  const context = {
+  vm.runInNewContext(script, {
     paint,
     crop
-  };
-
-  vm.createContext(context);
-  vm.runInContext(script, context);
+  });
 
   if (outputHtml) {
     const gridToCanvas = require("./grid-to-canvas");

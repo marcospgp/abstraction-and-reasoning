@@ -41,27 +41,26 @@ module.exports = (grid, outputFilename) => {
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const cellWidth = canvasWidth / grid[0].length;
-        const cellHeight = canvasHeight / grid.length;
+        const cellSide = canvasWidth / grid[0].length;
+        const canvasHeight = cellSide * grid.length;
 
         // Draw squares
         for (const [y, row] of grid.entries()) {
           for (const [x, color] of row.entries()) {
             ctx.fillStyle = colors[color];
-            ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+            ctx.fillRect(x * cellSide, y * cellSide, cellSide, cellSide);
           }
         }
 
         // Draw grid lines (after squares so they don't get covered up)
         ctx.beginPath();
         for (const y of grid.keys()) {
-          ctx.moveTo(0, y * cellHeight);
-          ctx.lineTo(canvasWidth, y * cellHeight);
+          ctx.moveTo(0, y * cellSide);
+          ctx.lineTo(canvasWidth, y * cellSide);
         }
         for (const x of grid[0].keys()) {
-          ctx.moveTo(x * cellWidth, 0);
-          ctx.lineTo(x * cellWidth, canvasHeight);
+          ctx.moveTo(x * cellSide, 0);
+          ctx.lineTo(x * cellSide, canvasHeight);
         }
         ctx.strokeStyle = "#555555";
         ctx.stroke();

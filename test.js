@@ -21,6 +21,8 @@ for (const file of jsonFiles) {
 
     if (JSON.stringify(output) !== JSON.stringify(testGrid.output)) {
       errors.push(new Error(`Failed test grid #${i + 1} of task "${file}"`));
+    } else {
+      console.log(`Successfully solved test grid #${i + 1} of task "${file}"`)
     }
   }
 }

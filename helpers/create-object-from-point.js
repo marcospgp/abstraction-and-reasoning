@@ -19,7 +19,7 @@ module.exports = function createObjectFromPoint(y, x, grid, backgroundColor = 0)
     for (const [y, x] of obj) {
       // Get neighbors in a □ shape, to avoid missing any diagonally connected
       // squares
-      const neighbors = [
+      let neighbors = [
         [y, x + 1],
         [y, x - 1],
         [y + 1, x],
@@ -29,6 +29,11 @@ module.exports = function createObjectFromPoint(y, x, grid, backgroundColor = 0)
         [y - 1, x + 1],
         [y - 1, x - 1],
       ];
+
+      // Remove out of bounds neighbors
+      neighbors = neighbors.filter(([y, x]) =>
+        y >= 0 && x >= 0 && y < grid.length && x < grid[0].length
+      );
 
       for (const [y2, x2] of neighbors) {
         const notInObject = obj.find(
