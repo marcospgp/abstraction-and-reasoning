@@ -54,7 +54,7 @@ const createObjectFromSquare = (y, x, grid, backgroundColor) => {
       ];
 
       for (const [y2, x2] of neighbors) {
-        const alreadyInObject = obj.find(p => p.y === y2 && p.x === x2);
+        const alreadyInObject = obj.find(p => p[0] === y2 && p[1] === x2);
         if (alreadyInObject !== undefined) continue;
 
         if (grid[y2][x2] !== backgroundColor) {
@@ -71,6 +71,98 @@ const createObjectFromSquare = (y, x, grid, backgroundColor) => {
   }
 
   return f([[y,x]]);
+}
+
+// Get an object's interior, composed of squares of background color completely
+// surrounded by the object's squares
+const getInterior = (obj, grid, backgroundColor = 0) => {
+  // Recursive function that expands from a point, encompassing neighbor squares
+  // of background color (without crossing points belonging to the object
+  // itself).
+  // If we hit the limits of the grid, return null.
+  // Otherwise, return the collected points as they represent the interior.
+  const expand = points => {
+    let addedPoint = false;
+
+    for (const [y, x] of points) {
+      let neighbors = [
+        [y, x + 1],
+        [y, x - 1],
+        [y + 1, x],
+        [y - 1, x],
+        [y + 1, x + 1],
+        [y + 1, x - 1],
+        [y - 1, x + 1],
+        [y - 1, x - 1],
+      ];
+
+      // Remove any neighbors already encompassed
+      neighbors = neighbors.filter(
+        n => points.find(
+          p => p[0] === n[0] && p[1] === n[1]
+        ) === undefined
+      )
+
+      // Remove any neighbors belonging to the object
+      neighbors = neighbors.filter(
+        n => obj.find(
+          p => p[0] === n[0] && p[1] === n[1]
+        ) === undefined
+      )
+
+      if (neighbors.length === 0) continue;
+
+      // If any remaining neighbor is outside the grid or part of another
+      // object, return null - because we're not the interior
+      for (const [ny, nx] of neighbors) {
+        if (
+          ny < 0 ||
+          ny > grid.length - 1 ||
+          nx < 0 ||
+          nx > grid[0].length - 1
+        ) {
+          return null;
+        }
+        if (
+          grid[ny][nx] !== backgroundColor &&
+          obj.find(p => p[0] === ny && p[1] === nx) === undefined
+        ) {
+          return null;
+        }
+      }
+
+      // Encompass remaining neighbors of background color
+      for (const [ny, nx] of neighbors) {
+        if (grid[ny][nx] === backgroundColor) {
+          points.push([ny, nx]);
+        }
+      }
+    }
+
+    if (!addedPoint) return points;
+    return expand(points);
+  }
+
+  let expansions = obj.map(point => expand([point]));
+
+  expansions = expansions.filter(x => x !== null);
+
+  // Merge all interiors without repetitions to get complete interior
+  const interior = expansions.reduce((prev, cur) => {
+    let result = [...prev];
+
+    for (const point of cur) {
+      if (!prev.find(p => p[0] === cur[0] && p[1] === cur[1])) {
+        result.push(point);
+      }
+    }
+
+    return result;
+  }, []);
+
+  console.log(JSON.stringify(interior, null, 2));
+
+  return interior;
 }
 
 // Given a selector object, returns targeted coordinates of the grid
@@ -113,13 +205,6 @@ const select = selector => {
     }
   }
 
-  // Creating initial objects by iterating square by square is imperfect, as
-  // squares neighboring squares that haven't been checked yet will be seen as
-  // a new object.
-  // This means now we merge objects that neighbor each other:
-
-  // If there were any merges, check again as there might be new neighbors
-
   console.log(`Found ${objects.length} objects`);
 
   // selector.part: only supports "interior" for now
@@ -129,48 +214,7 @@ const select = selector => {
     }
 
     if (selector.part === "interior") {
-      // Create one empty interior per object in selection
-      const interiors = objects.map(x => []);
-
-      // Iterate over squares of grid
-      for (const [y, row] of grid.entries()) {
-        for (const [x, color] of row.entries()) {
-
-          // If a square is background color and is surrounded by the squares of
-          // an object, it is an interior square
-          if (color === backgroundColor) {
-            for (const [i, coords] of objects.entries()) {
-
-              // left, right, up, down
-              const surrounded = [false, false, false, false];
-
-              for (const [y2, x2] of coords) {
-                if (x2 === x && y2 < y) {
-                  surrounded[0] = true;
-                }
-                if (y2 === y && x2 > x) {
-                  surrounded[1] = true;
-                }
-                if (x2 === x && y2 > y) {
-                  surrounded[2] = true;
-                }
-                if (y2 === y && x2 < x) {
-                  surrounded[3] = true;
-                }
-
-                // If square is surrounded, add to current object's interior
-                // and break loop
-                if (!surrounded.includes(false)) {
-                  interiors[i].push([y, x]);
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      objects = interiors;
+      objects = objects.map(x => getInterior(x, grid, backgroundColor));
     }
   }
 
