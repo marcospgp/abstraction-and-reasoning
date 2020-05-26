@@ -1,1 +1,1 @@
-color({ part: "interior"}, "yellow");
+paint({ part: "interior"}, "yellow");

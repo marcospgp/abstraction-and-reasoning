@@ -83,37 +83,31 @@ module.exports = function getInterior(obj, grid, backgroundColor = 0) {
 
   // Get unique neighbors of all squares of the object, ignoring squares
   // belonging to the object itself
-  let neighbors = obj.reduce(
-    /**
-     * @param {number[][]} prev
-     */
-    (prev, cur) => {
-      const [y, x] = cur;
+  let neighbors = obj.reduce((prev, cur) => {
+    const [y, x] = cur;
 
-      const neighbors = [
-        [y, x + 1],
-        [y, x - 1],
-        [y + 1, x],
-        [y - 1, x]
-      ];
+    const neighbors = [
+      [y, x + 1],
+      [y, x - 1],
+      [y + 1, x],
+      [y - 1, x]
+    ];
 
-      const result = [...prev];
+    const result = [...prev];
 
-      for (const n of neighbors) {
-        if (
-          // square is not yet selected
-          result.find(([y, x]) => y === n[0] && x === n[1]) === undefined &&
-          // square does not belong to object
-          obj.find(([y, x]) => y === n[0] && x === n[1]) === undefined
-        ) {
-          result.push(n);
-        }
+    for (const n of neighbors) {
+      if (
+        // square is not yet selected
+        result.find(([y, x]) => y === n[0] && x === n[1]) === undefined &&
+        // square does not belong to object
+        obj.find(([y, x]) => y === n[0] && x === n[1]) === undefined
+      ) {
+        result.push(n);
       }
+    }
 
-      return result;
-    },
-    []
-  );
+    return result;
+  }, []);
 
   let expansions = neighbors.map(point => expand([point]));
 
@@ -132,4 +126,4 @@ module.exports = function getInterior(obj, grid, backgroundColor = 0) {
   }, []);
 
   return interior;
-};
+}

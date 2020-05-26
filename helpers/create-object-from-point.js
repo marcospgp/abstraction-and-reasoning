@@ -49,4 +49,4 @@ module.exports = function createObjectFromPoint(y, x, grid, backgroundColor = 0)
   }
 
   return f([[y,x]]);
-}
+};
