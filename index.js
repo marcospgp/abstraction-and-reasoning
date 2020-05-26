@@ -2,7 +2,7 @@
 
 const executor = require("./executor");
 
-const { train, test } = require("./0b148d64.json");
+const { train, test } = require("./ac0a08a4.json");
 const grid = test[0].input;
 
 executor("./program.js", grid, "output");

@@ -1,0 +1,1 @@
+scaleGrid("up", "$numberOfNonBackgroundSquaresInGrid");

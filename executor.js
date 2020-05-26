@@ -6,6 +6,7 @@ const getInterior = require("./helpers/get-interior");
 const createObjectFromPoint = require("./helpers/create-object-from-point");
 const getLeastUsedColor = require("./helpers/get-least-used-color");
 const selectObjectsOfColor = require("./helpers/select-objects-of-color");
+const getNumberOfNonBackgroundSquares = require("./helpers/get-number-of-non-background-squares");
 
 const colors = {
   "black": 0,
@@ -161,11 +162,50 @@ module.exports = (pathToProgram, grid, outputHtml = null) => {
     grid = newGrid;
   }
 
+  // Scales the grid up or down
+  const scaleGrid = (upOrDown, factor) => {
+    if (upOrDown !== "up" && upOrDown !== "down") {
+      throw new Error("Invalid upOrDown");
+    }
+    if (factor !== "$numberOfNonBackgroundSquaresInGrid") {
+      throw new Error("Invalid scale factor");
+    }
+
+    if (factor === "$numberOfNonBackgroundSquaresInGrid") {
+      factor = getNumberOfNonBackgroundSquares(grid);
+    }
+
+    if (upOrDown === "down") {
+      throw new Error("Unsupported upOrDown = down");
+    }
+
+    const newGrid = [];
+
+    if (upOrDown === "up") {
+
+      for (const row of grid) {
+        const newRow = [];
+        for (const color of row) {
+          for (let i = 0; i < factor; i++) {
+            newRow.push(color);
+          }
+        }
+
+        for (let i = 0; i < factor; i++) {
+          newGrid.push(newRow);
+        }
+      }
+    }
+
+    grid = newGrid;
+  }
+
   const script = fs.readFileSync(pathToProgram, "utf8");
 
   vm.runInNewContext(script, {
     paint,
-    crop
+    crop,
+    scaleGrid
   });
 
   if (outputHtml) {
