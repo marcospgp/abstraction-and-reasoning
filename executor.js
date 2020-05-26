@@ -4,7 +4,7 @@ const vm = require("vm");
 const fs = require("fs");
 const getInterior = require("./helpers/get-interior");
 const createObjectFromPoint = require("./helpers/create-object-from-point");
-const leastUsedColor = require("./helpers/least-used-color");
+const getLeastUsedColor = require("./helpers/get-least-used-color");
 
 const colors = {
   "black": 0,
@@ -33,7 +33,6 @@ const checkColorParameter = (color) => {
 const getAllObjects = (grid, backgroundColor = 0) => {
   const objects = [];
 
-  console.log(grid);
   for (const [y, row] of grid.entries()) {
     for (const [x, color] of row.entries()) {
 
@@ -96,7 +95,9 @@ const select = (selector, grid) => {
       throw new Error("Invalid special-color");
     }
 
-    leastUsedColor = getLeastUsedColor(grid);
+    const leastUsedColor = getLeastUsedColor(grid);
+
+    objects = selectObjectsOfColor(objects, grid, leastUsedColor);
   }
 
   return objects;
