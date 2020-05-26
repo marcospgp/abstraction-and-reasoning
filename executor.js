@@ -42,6 +42,8 @@ const createObjectFromSquare = (y, x, grid, backgroundColor) => {
     let added = false;
 
     for (const [y, x] of obj) {
+      // Get neighbors in a □ shape, to avoid missing any diagonally connected
+      // squares
       const neighbors = [
         [y, x + 1],
         [y, x - 1],
@@ -85,35 +87,32 @@ const getInterior = (obj, grid, backgroundColor = 0) => {
     let addedPoint = false;
 
     for (const [y, x] of points) {
+      // Get neighbors in a + shape, to avoid crossing object boundaries
       let neighbors = [
         [y, x + 1],
         [y, x - 1],
         [y + 1, x],
-        [y - 1, x],
-        [y + 1, x + 1],
-        [y + 1, x - 1],
-        [y - 1, x + 1],
-        [y - 1, x - 1],
+        [y - 1, x]
       ];
 
       // Remove any neighbors already encompassed
-      neighbors = neighbors.filter(
-        n => points.find(
-          p => p[0] === n[0] && p[1] === n[1]
+      neighbors = neighbors.filter(([ny, nx]) =>
+        points.find(([py, px]) =>
+          ny === py && nx === px
         ) === undefined
-      )
+      );
 
       // Remove any neighbors belonging to the object
-      neighbors = neighbors.filter(
-        n => obj.find(
-          p => p[0] === n[0] && p[1] === n[1]
+      neighbors = neighbors.filter(([ny, nx]) =>
+        obj.find(([oy, ox]) =>
+          ny === oy && nx === ox
         ) === undefined
-      )
+      );
 
       if (neighbors.length === 0) continue;
 
-      // If any remaining neighbor is outside the grid or part of another
-      // object, return null - because we're not the interior
+      // If any remaining neighbor is outside the grid return null,
+      // because that means we're not the interior
       for (const [ny, nx] of neighbors) {
         if (
           ny < 0 ||
@@ -123,18 +122,15 @@ const getInterior = (obj, grid, backgroundColor = 0) => {
         ) {
           return null;
         }
-        if (
-          grid[ny][nx] !== backgroundColor &&
-          obj.find(p => p[0] === ny && p[1] === nx) === undefined
-        ) {
-          return null;
-        }
       }
 
       // Encompass remaining neighbors of background color
+      // this way, if there are any other objects in the interior of this object
+      // (aka squares of non background color) they are just ignored.
       for (const [ny, nx] of neighbors) {
         if (grid[ny][nx] === backgroundColor) {
           points.push([ny, nx]);
+          addedPoint = true;
         }
       }
     }
@@ -143,7 +139,41 @@ const getInterior = (obj, grid, backgroundColor = 0) => {
     return expand(points);
   }
 
-  let expansions = obj.map(point => expand([point]));
+  // We will expand from every unique neighbor around every point of the object.
+  // We do not expand from the points of the object themselves because
+  // then we could be expanding both inwards and outwards (if the object only
+  // has a thickness of 1 square), which would prevent us from finding the
+  // interior in those expansions.
+
+  // Get unique neighbors of all squares of the object, ignoring squares
+  // belonging to the object itself
+  let neighbors = obj.reduce((prev, cur) => {
+    const [y, x] = cur;
+
+    const neighbors = [
+      [y, x + 1],
+      [y, x - 1],
+      [y + 1, x],
+      [y - 1, x]
+    ];
+
+    const result = [...prev];
+
+    for (const n of neighbors) {
+      if (
+        // square is not yet selected
+        result.find(([y, x]) => y === n[0] && x === n[1]) === undefined &&
+        // square does not belong to object
+        obj.find(([y, x]) => y === n[0] && x === n[1]) === undefined
+      ) {
+        result.push(n);
+      }
+    }
+
+    return result;
+  }, []);
+
+  let expansions = neighbors.map(point => expand([point]));
 
   expansions = expansions.filter(x => x !== null);
 
@@ -156,11 +186,8 @@ const getInterior = (obj, grid, backgroundColor = 0) => {
         result.push(point);
       }
     }
-
     return result;
   }, []);
-
-  console.log(JSON.stringify(interior, null, 2));
 
   return interior;
 }
