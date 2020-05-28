@@ -10,7 +10,7 @@ and this:
 
 `crop({ "contains-most-squares-of-color": "$least-used-color" });`
 
-The syntax is a very small subset of Javascript, and was designed to have a small enough scope that an AI could be taught to write programs in it. For the programs to be executed on an input grid, they must be interpreted by a bigger script, which is provided in this repo.
+The syntax is a very small subset of Javascript, and was designed to have a small enough scope that an AI could be taught to write programs in it. For the programs to be executed on an input grid, they must be interpreted by a bigger script, which can be run using Node.js and is provided in this repo.
 
 ARC DSL is at an early stage of completion, but comes with 5 examples of solved ARC tasks.
 
