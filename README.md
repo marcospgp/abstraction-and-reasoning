@@ -2,6 +2,14 @@
 
 Implements a domain specific language for the ARC challenge by François Chollet.
 
+Programs in ARC DSL look like this:
+
+`paint({ part: "interior"}, "yellow");`
+
+and this:
+
+`crop({ "contains-most-squares-of-color": "$least-used-color" });`
+
 ## How to run
 
 Use `node index.js` to run a program on a task file (you can set the program to run & task to run it on in the file itself).
@@ -14,6 +22,8 @@ Use `test.js` to test all program/task pairs in `/handled-tasks`.
 
 `grid-to-canvas.js` writes a grid to an html file for easier viewing. `index.js` uses it to output the result of running a program on a task.
 
+`/helpers` contains scripts that help handling 2D grids, for things such as determining the "interior" of selected objects.
+
 ## How it works
 
 ARC DSL is composed of javascript functions. To make it possible for an AI to write these programs, the language has been made as simple as possible - there is no boilerplate nor any auxiliary arguments being passed around.
@@ -25,12 +35,19 @@ When you see an object being passed to one of these commands, that's a `selector
 
 An "object" is a group of connected squares of non background color. The background color is black (0) by default, but it should be customizable (this functionality is not yet implemented).
 
-I also started implementing special tokens (strings starting with the character "$") that act as placeholders for dynamic values. For example:
+The following commands are implemented:
 
-* "$least-used-color" would be translated into the color used by the least squares in the input grid (useful when one wants to specify the color being used to "highlight")
-* "$numberOfNonBackgroundSquaresInGrid" would be the number of squares in the grid of non background color
+* `paint`: Changes the color of selected objects into a given color.
+* `crop`: Crops the grid to encompass only the selected objects.
+* `outline`: Draws a 1-square-wide outline around the selected objects.
+* `scaleGrid`: Scales the grid up or down by a given factor, preserving its contents.
 
-Other placeholders are possible, but these two are the only I have implemented so far.
+I also started implementing special tokens (strings starting with the character "$") that act as placeholders for dynamic values. These strings can be passed to commands either as parameters or as part of the selector object (the object that specifies which objects in the grid to target). For example:
+
+* `$least-used-color` would be translated into the color used by the least squares in the input grid (useful when one wants to specify the color being used to "highlight").
+* `$numberOfNonBackgroundSquaresInGrid` would be the number of squares in the grid of non background color.
+
+Other commands and placeholder tokens are possible, but these are the only I have implemented so far.
 
 ## Examples
 
